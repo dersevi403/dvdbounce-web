@@ -11,7 +11,7 @@
     { el: logo2, desiredSpeed: 100, ratio: 0.5, width: 80 }
   ];
 
-  // Helper function for random starting position
+  // Helper function: random starting position
   function getRandomPosition(stageWidth, stageHeight, logoWidth, logoHeight) {
     return {
       x: Math.random() * (stageWidth - logoWidth),
@@ -19,15 +19,17 @@
     };
   }
 
-  // Initialize logos
-  logos.forEach(logo => {
+  // Initialize a single logo
+  function initLogo(logo) {
+    // set custom size
     logo.el.style.width = logo.width + 'px';
     logo.el.style.height = 'auto';
 
+    // calculate velocities
     logo.vx = logo.desiredSpeed / Math.sqrt(1 + logo.ratio * logo.ratio);
     logo.vy = logo.vx * logo.ratio;
 
-    logo.el.addEventListener('load', () => {
+    function positionLogo() {
       const S = stage.getBoundingClientRect();
       const L = logo.el.getBoundingClientRect();
       logo.width = L.width;
@@ -38,10 +40,22 @@
       logo.y = pos.y;
 
       logo.el.style.transform = `translate(${logo.x}px, ${logo.y}px)`;
-    });
-  });
+    }
 
+    // Handle cached images or newly loaded images
+    if (logo.el.complete) {
+      positionLogo();
+    } else {
+      logo.el.addEventListener('load', positionLogo);
+    }
+  }
+
+  // Initialize all logos
+  logos.forEach(initLogo);
+
+  // =====================
   // Animation loop
+  // =====================
   let last = null;
   function step(ts) {
     if (!last) last = ts;
@@ -57,6 +71,7 @@
       const maxX = Math.max(0, S.width - logo.width);
       const maxY = Math.max(0, S.height - logo.height);
 
+      // bounce
       if (logo.x <= 0) { logo.x = 0; logo.vx = Math.abs(logo.vx); }
       else if (logo.x >= maxX) { logo.x = maxX; logo.vx = -Math.abs(logo.vx); }
 
@@ -71,7 +86,9 @@
 
   requestAnimationFrame(step);
 
+  // =====================
   // Keep logos inside stage on resize
+  // =====================
   window.addEventListener('resize', () => {
     const S = stage.getBoundingClientRect();
     logos.forEach(logo => {
@@ -82,4 +99,3 @@
   });
 
 })();
-
